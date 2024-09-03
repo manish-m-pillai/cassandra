@@ -39,6 +39,8 @@ import org.apache.cassandra.transport.Event.SchemaChange.Target;
 
 import static org.apache.cassandra.utils.ByteBufferUtil.bytes;
 
+import org.apache.cassandra.cql3.ReservedKeywords;
+
 import static java.util.stream.Collectors.toList;
 
 public final class CreateTypeStatement extends AlterSchemaStatement
@@ -66,7 +68,10 @@ public final class CreateTypeStatement extends AlterSchemaStatement
         KeyspaceMetadata keyspace = schema.getNullable(keyspaceName);
         if (null == keyspace)
             throw ire("Keyspace '%s' doesn't exist", keyspaceName);
-
+        if (ReservedKeywords.isReserved(typeName))
+        {
+            throw ire(String.format("Cannot use reserved keyword '%s' as a user-defined type name", typeName));
+        }
         UserType existingType = keyspace.types.getNullable(bytes(typeName));
         if (null != existingType)
         {
