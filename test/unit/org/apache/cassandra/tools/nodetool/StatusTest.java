@@ -117,4 +117,52 @@ public class StatusTest extends CQLTester
         assertThat(hostStatus).endsWith(SimpleSnitch.RACK_NAME);
         assertThat(hostStatus).doesNotContain("?");
     }
+
+    @Test
+    public void testSortByIp() {
+        HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
+        validateStatusOutput(host.ipOrDns(false), "-s", "ip");
+    }
+    @Test
+    public void testSortByLoad() {
+        HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
+        validateStatusOutput(host.ipOrDns(false), "-s", "load");
+    }
+    @Test
+    public void testSortByOwnership() {
+        HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
+        validateStatusOutput(host.ipOrDns(false), "-s", "owns");
+    }
+    @Test
+    public void testSortById() {
+        HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
+        validateStatusOutput(host.ipOrDns(false), "-s", "id");
+    }
+    @Test
+    public void testSortByRack() {
+        HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
+        validateStatusOutput(host.ipOrDns(false), "-s", "rack");
+    }
+    @Test
+    public void testSortByStatus() {
+        HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
+        validateStatusOutput(host.ipOrDns(false), "-s", "status");
+    }
+    @Test
+    public void testInvalidSortOption() {
+        HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
+        validateStatusOutput(host.ipOrDns(false), "-s", "invalid");
+    }
+    @Test
+    public void testSortOrderAscending() {
+        HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
+        validateStatusOutput(host.ipOrDns(false), "-s", "ip", "-o", "a");
+    }
+
+    @Test
+    public void testSortOrderDescending() {
+        HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
+        validateStatusOutput(host.ipOrDns(false), "-s", "ip", "-o", "d");
+    }
+
 }
