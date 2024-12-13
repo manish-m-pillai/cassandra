@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.cassandra.tools.nodetool;
 
 import io.airlift.airline.Arguments;
@@ -47,8 +48,7 @@ import static java.util.stream.Collectors.toMap;
 
 @SuppressWarnings("UseOfSystemOutOrSystemErr")
 @Command(name = "status", description = "Print cluster information (state, load, IDs, ...)")
-public class Status extends NodeToolCmd
-{
+public class Status extends NodeToolCmd {
     @Arguments(usage = "[<keyspace>]", description = "The keyspace name")
     private String keyspace = null;
 
@@ -72,21 +72,169 @@ public class Status extends NodeToolCmd
     private Map<String, String> loadMap, hostIDMap;
     private EndpointSnitchInfoMBean epSnitchInfo;
 
-    public enum SortOrder
-    {
+    public enum SortOrder {
         asc,
         desc
     }
 
     public enum SortBy
     {
-        none,
-        ip,
-        load,
-        owns,
-        id,
-        rack,
-        state
+        none
+                {
+                    @Override
+                    public Map<String, List<Object>> sort(Map<String, List<Object>> data)
+                    {
+                        return data;
+                    }
+                },
+        ip(false)
+                {
+                    @Override
+                    public Map<String, List<Object>> sort(Map<String, List<Object>> data)
+                    {
+                        return data.entrySet()
+                                .stream()
+                                .sorted((e1, e2) -> {
+                                    InetAddressAndPort addr1 = (InetAddressAndPort) e1.getValue().get(0);
+                                    InetAddressAndPort addr2 = (InetAddressAndPort) e2.getValue().get(0);
+
+                                    return evaluateComparision(addr1.compareTo(addr2));
+                                })
+                                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+                    }
+                },
+        load(true)
+                {
+                    @Override
+                    public Map<String, List<Object>> sort(Map<String, List<Object>> data)
+                    {
+                        return data.entrySet()
+                                .stream()
+                                .sorted((e1, e2) -> {
+                                    String str1 = (String) e1.getValue().get(3);
+                                    String str2 = (String) e2.getValue().get(3);
+                                    // Check if str1 or str2 contains a '?' and set a value for it.
+                                    boolean containsQuestionMark1 = str1.contains("?");
+                                    boolean containsQuestionMark2 = str2.contains("?");
+                                    if (containsQuestionMark1 && containsQuestionMark2) {
+                                        // If both contain '?', return 0 (they are considered equal).
+                                        return 0;
+                                    }
+
+                                    boolean descending = descending(sortOrder);
+
+                                    // If str1 contains '?', ensure it's last (or first depending on descending).
+                                    if (containsQuestionMark1)
+                                        return descending ? 1 : -1;
+
+                                    // If str2 contains '?', ensure it's last (or first depending on descending).
+                                    if (containsQuestionMark2)
+                                        return descending ? -1 : 1;
+
+                                    // If neither contain '?', parse the file sizes and compare.
+                                    long value1 = FileUtils.parseFileSize((String) e1.getValue().get(3));
+                                    long value2 = FileUtils.parseFileSize((String) e2.getValue().get(3));
+
+                                    return evaluateComparision(Long.compare(value1, value2));
+                                })
+                                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+                    }
+                },
+        owns(true)
+                {
+                    @Override
+                    public Map<String, List<Object>> sort(Map<String, List<Object>> data)
+                    {
+                        return data.entrySet()
+                                .stream()
+                                .sorted((e1, e2) -> {
+                                    double value1 = Double.parseDouble(((String) e1.getValue().get(tokenPerNode ? 4 : 5)).replace("%", ""));
+                                    double value2 = Double.parseDouble(((String) e2.getValue().get(tokenPerNode ? 4 : 5)).replace("%", ""));
+
+                                    return evaluateComparision(Double.compare(value1, value2));
+                                })
+                                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+                    }
+                },
+        id(false)
+                {
+                    @Override
+                    public Map<String, List<Object>> sort(Map<String, List<Object>> data)
+                    {
+                        return compareStrings(data, tokenPerNode ? 5 : 6);
+                    }
+                },
+        rack(false)
+                {
+                    @Override
+                    public Map<String, List<Object>> sort(Map<String, List<Object>> data)
+                    {
+                        return compareStrings(data, 7);
+                    }
+                },
+        state(true)
+                {
+                    @Override
+                    public Map<String, List<Object>> sort(Map<String, List<Object>> data)
+                    {
+                        return compareStrings(data, 1);
+                    }
+                };
+
+        private final boolean descendingByDefault;
+        boolean tokenPerNode;
+        SortOrder sortOrder;
+
+        SortBy()
+        {
+            this(false);
+        }
+
+        SortBy(boolean descendingByDefault)
+        {
+            this.descendingByDefault = descendingByDefault;
+        }
+
+        public abstract Map<String, List<Object>> sort(Map<String, List<Object>> data);
+
+        boolean descending(SortOrder sortOrder)
+        {
+            return sortOrder == null ? descendingByDefault : sortOrder == SortOrder.desc;
+        }
+
+        SortBy sortOrder(SortOrder sortOrder)
+        {
+            this.sortOrder = sortOrder;
+            return this;
+        }
+
+        SortBy tokenPerNode(boolean tokenPerNode)
+        {
+            this.tokenPerNode = tokenPerNode;
+            return this;
+        }
+
+        int evaluateComparision(int comparisionResult)
+        {
+            if (comparisionResult < 0)
+                return descending(sortOrder) ? 1 : -1;
+            if (comparisionResult > 0)
+                return descending(sortOrder) ? -1 : 1;
+
+            return 0;
+        }
+
+        LinkedHashMap<String, List<Object>> compareStrings(Map<String, List<Object>> data, int index)
+        {
+            return data.entrySet()
+                    .stream()
+                    .sorted((e1, e2) -> {
+                        String str1 = (String) e1.getValue().get(index);
+                        String str2 = (String) e2.getValue().get(index);
+                        return evaluateComparision(str1.compareTo(str2));
+                    })
+                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        }
     }
 
     private void validateArguments(PrintStream out)
@@ -171,9 +319,10 @@ public class Status extends NodeToolCmd
                 data.put(epDns, nodeData);
             }
 
-            data = sort(data);
-
-            for (Map.Entry<String, List<Object>> entry : data.entrySet())
+            for (Map.Entry<String, List<Object>> entry : sortBy.tokenPerNode(isTokenPerNode)
+                    .sortOrder(sortOrder)
+                    .sort(data)
+                    .entrySet())
             {
                 List<Object> values = entry.getValue();
                 List<String> row = new ArrayList<>();
@@ -188,8 +337,9 @@ public class Status extends NodeToolCmd
         boolean first = true;
         for (Map.Entry<String, SetHostStatWithPort> dc : dcs.entrySet())
         {
-            if (!first)
+            if (!first) {
                 out.println();
+            }
             first = false;
             String dcHeader = String.format("Datacenter: %s%n", dc.getKey());
             out.print(dcHeader);
@@ -247,141 +397,4 @@ public class Status extends NodeToolCmd
         else
             return List.of(addressAndPort, statusAndState, epDns, load, String.valueOf(size), strOwns, hostID, rack);
     }
-
-    // To check for descending order
-    private Boolean desc()
-    {
-        return sortOrder == null ? null : sortOrder == SortOrder.desc;
-    }
-
-    // Sort function to sort the data
-    private Map<String, List<Object>> sort(Map<String, List<Object>> map)
-    {
-        switch (sortBy)
-        {
-            case none:
-                return map;
-            case ip:
-                return sortByIp(map);
-            case load:
-                return sortByLoad(map);
-            case id:
-                return sortById(map);
-            case rack:
-                return sortByRack(map);
-            case owns:
-                return sortByOwns(map);
-            case state:
-                return sortByState(map);
-            default:
-                throw new IllegalArgumentException("Sorting by " + sortBy + " is not supported.");
-        }
-    }
-
-    // Helper Function to Sort by Ip
-    private LinkedHashMap<String, List<Object>> sortByIp(Map<String, List<Object>> data)
-    {
-        int index = 0;
-        boolean desc = desc() != null ? desc() : false; // default is ascending
-        return data.entrySet()
-                .stream()
-                .sorted((e1, e2) -> {
-                    InetAddressAndPort addr1 = (InetAddressAndPort) e1.getValue().get(index);
-                    InetAddressAndPort addr2 = (InetAddressAndPort) e2.getValue().get(index);
-                    return desc ? addr2.compareTo(addr1) : addr1.compareTo(addr2);
-                })
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-    }
-
-    // Helper Function to Sort by Load
-    private LinkedHashMap<String, List<Object>> sortByLoad(Map<String, List<Object>> data)
-    {
-        int index = 3;
-        boolean desc = desc() != null ? desc() : true; // defalut is descending
-        return data.entrySet()
-                .stream()
-                .sorted((e1, e2) -> {
-                    String str1 = (String) e1.getValue().get(index);
-                    String str2 = (String) e2.getValue().get(index);
-                    // Check if str1 or str2 contains a '?' and set a value for it.
-                    boolean containsQuestionMark1 = str1.contains("?");
-                    boolean containsQuestionMark2 = str2.contains("?");
-
-                    if (containsQuestionMark1 && containsQuestionMark2) // If both contain '?', return 0 (they are considered equal).
-                        return 0;
-
-                    if (containsQuestionMark1) // If str1 contains '?', ensure it's last (or first depending on descending).
-                        return desc ? 1 : -1;
-
-                    if (containsQuestionMark2) // If str2 contains '?', ensure it's last (or first depending on descending).
-                        return desc ? -1 : 1;
-
-                    // If neither contain '?', parse the file sizes and compare.
-                    long value1 = FileUtils.parseFileSize((String) e1.getValue().get(index));
-                    long value2 = FileUtils.parseFileSize((String) e2.getValue().get(index));
-                    return desc ? Long.compare(value2, value1) : Long.compare(value1, value2);
-                })
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-    }
-
-    // Helper Function to Sort by Host ID
-    private LinkedHashMap<String, List<Object>> sortById(Map<String, List<Object>> data)
-    {
-        int index = isTokenPerNode ? 5 : 6;
-        boolean desc = desc() != null ? desc() : false; // default is ascending
-        return data.entrySet()
-                .stream()
-                .sorted((e1, e2) -> {
-                    String str1 = (String) e1.getValue().get(index);
-                    String str2 = (String) e2.getValue().get(index);
-                    return desc ? str2.compareTo(str1) : str1.compareTo(str2);
-                })
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-    }
-
-    // Helper Function to Sort by Rack
-    private LinkedHashMap<String, List<Object>> sortByRack(Map<String, List<Object>> data)
-    {
-        int index = 7;
-        boolean desc = desc() != null ? desc() : false; // default is ascending
-        return data.entrySet()
-                .stream()
-                .sorted((e1, e2) -> {
-                    String str1 = (String) e1.getValue().get(index);
-                    String str2 = (String) e2.getValue().get(index);
-                    return desc ? str2.compareTo(str1) : str1.compareTo(str2);
-                })
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-    }
-
-    // Helper Function to Sort by Owns
-    private LinkedHashMap<String, List<Object>> sortByOwns(Map<String, List<Object>> data)
-    {
-        int index = isTokenPerNode ? 4 : 5;
-        boolean desc = desc() != null ? desc() : true; // default is descending
-        return data.entrySet()
-                .stream()
-                .sorted((e1, e2) -> {
-                    double value1 = Double.parseDouble(((String) e1.getValue().get(index)).replace("%", ""));
-                    double value2 = Double.parseDouble(((String) e2.getValue().get(index)).replace("%", ""));
-                    return desc ? Double.compare(value2, value1) : Double.compare(value1, value2);
-                })
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-    }
-
-    // Helper Function to Sort by State
-    private LinkedHashMap<String, List<Object>> sortByState(Map<String, List<Object>> data)
-    {
-        int index = 1;
-        boolean desc = desc() != null ? desc() : true; // default is descending
-        return data.entrySet()
-                .stream()
-                .sorted((e1, e2) -> {
-                    String str1 = (String) e1.getValue().get(index);
-                    String str2 = (String) e2.getValue().get(index);
-                    return desc ? str2.compareTo(str1) : str1.compareTo(str2);
-                })
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-    }
-
 }
