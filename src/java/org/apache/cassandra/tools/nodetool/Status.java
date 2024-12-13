@@ -220,20 +220,13 @@ public class Status extends NodeToolCmd
     {
         String endpoint = addressAndPort.getHostAddressAndPort();
         String status, state, load, strOwns, hostID, rack;
-        if (liveNodes.contains(endpoint))
-            status = "U";
-        else if (unreachableNodes.contains(endpoint))
-            status = "D";
-        else
-            status = "?";
-        if (joiningNodes.contains(endpoint))
-            state = "J";
-        else if (leavingNodes.contains(endpoint))
-            state = "L";
-        else if (movingNodes.contains(endpoint))
-            state = "M";
-        else
-            state = "N";
+        if (liveNodes.contains(endpoint)) status = "U";
+        else if (unreachableNodes.contains(endpoint)) status = "D";
+        else status = "?";
+        if (joiningNodes.contains(endpoint)) state = "J";
+        else if (leavingNodes.contains(endpoint)) state = "L";
+        else if (movingNodes.contains(endpoint)) state = "M";
+        else state = "N";
 
         String statusAndState = status.concat(state);
         load = loadMap.getOrDefault(endpoint, "?");
