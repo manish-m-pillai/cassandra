@@ -80,7 +80,7 @@ public class StatusTest extends CQLTester
         tool.assertOnCleanExit();
         String[] lines = PATTERN.split(tool.getStdout());
 
-        String hostStatus = lines[lines.length-3].trim();
+        String hostStatus = lines[lines.length - 3].trim();
         assertThat(hostStatus).startsWith("UN");
         assertThat(hostStatus).contains(FBUtilities.getJustLocalAddress().getHostAddress());
         assertThat(hostStatus).containsPattern("\\d+\\.?\\d+ KiB");
@@ -88,7 +88,7 @@ public class StatusTest extends CQLTester
         assertThat(hostStatus).contains(token);
         assertThat(hostStatus).endsWith(SimpleSnitch.RACK_NAME);
 
-        String bootstrappingWarn = lines[lines.length-1].trim();
+        String bootstrappingWarn = lines[lines.length - 1].trim();
         assertThat(bootstrappingWarn)
                 .contains("probably still bootstrapping. Effective ownership information is meaningless.");
     }
@@ -107,7 +107,7 @@ public class StatusTest extends CQLTester
          */
         String[] lines = PATTERN.split(tool.getStdout());
         assertThat(lines[0].trim()).endsWith(SimpleSnitch.DATA_CENTER_NAME);
-        String hostStatus = lines[lines.length-1].trim();
+        String hostStatus = lines[lines.length - 1].trim();
         assertThat(hostStatus).startsWith("UN");
         assertThat(hostStatus).contains(hostForm);
         assertThat(hostStatus).containsPattern("\\d+\\.?\\d+ KiB");
@@ -119,48 +119,57 @@ public class StatusTest extends CQLTester
     }
 
     @Test
-    public void testSortByIp() {
+    public void testSortByIp()
+    {
         HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
         validateStatusOutput(host.ipOrDns(false), "status", "-s", "ip");
     }
 
     @Test
-    public void testSortByLoad() {
+    public void testSortByLoad()
+    {
         HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
         validateStatusOutput(host.ipOrDns(false), "status", "-s", "load");
     }
 
     @Test
-    public void testSortByOwnership() {
+    public void testSortByOwnership()
+    {
         HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
         validateStatusOutput(host.ipOrDns(false), "status", "-s", "owns");
     }
 
     @Test
-    public void testSortById() {
+    public void testSortById()
+    {
         HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
         validateStatusOutput(host.ipOrDns(false), "status", "-s", "id");
     }
+
     @Test
-    public void testSortByRack() {
+    public void testSortByRack()
+    {
         HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
         validateStatusOutput(host.ipOrDns(false), "status", "-s", "rack");
     }
 
     @Test
-    public void testSortByStatus() {
+    public void testSortByStatus()
+    {
         HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
         validateStatusOutput(host.ipOrDns(false), "status", "-s", "state");
     }
 
     @Test
-    public void testSortOrderAscending() {
+    public void testSortOrderAscending()
+    {
         HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
         validateStatusOutput(host.ipOrDns(false), "status", "-s", "ip", "-o", "asc");
     }
 
     @Test
-    public void testSortOrderDescending() {
+    public void testSortOrderDescending()
+    {
         HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
         validateStatusOutput(host.ipOrDns(false), "status", "-s", "ip", "-o", "desc");
     }

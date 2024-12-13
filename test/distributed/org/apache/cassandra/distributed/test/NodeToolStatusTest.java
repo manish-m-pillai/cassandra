@@ -42,14 +42,16 @@ import java.net.UnknownHostException;
 import java.util.stream.Collectors;
 
 
-public class NodeToolStatusTest extends TestBaseImpl {
+public class NodeToolStatusTest extends TestBaseImpl
+{
     private static Cluster CLUSTER;
     private static IInvokableInstance NODE_1;
     private static IInvokableInstance NODE_2;
     private static IInvokableInstance NODE_3;
 
     @BeforeClass
-    public static void before() throws IOException {
+    public static void before() throws IOException
+    {
         CLUSTER = init(Cluster.build().withNodes(3).start());
         NODE_1 = CLUSTER.get(1);
         NODE_2 = CLUSTER.get(2);
@@ -57,14 +59,16 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     @AfterClass
-    public static void after() {
+    public static void after()
+    {
         if (CLUSTER != null)
             CLUSTER.close();
     }
 
     // Test Commands to validate the commands are working as expected.
     @Test
-    public void testCommands() {
+    public void testCommands()
+    {
         assertEquals(0, NODE_1.nodetool("status"));
         assertEquals(0, NODE_1.nodetool("status", "-s", "ip"));
         assertEquals(0, NODE_1.nodetool("status", "-s", "ip", "-o", "asc"));
@@ -76,7 +80,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
 
     // Test Cases for Ip
     @Test
-    public void testSortByIpDefault() {
+    public void testSortByIpDefault()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "ip");
         result.asserts().success();
         String output = result.getStdout();
@@ -92,7 +97,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     @Test
-    public void testSortByIpAsc() {
+    public void testSortByIpAsc()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "ip", "-o", "asc");
         result.asserts().success();
         String output = result.getStdout();
@@ -108,7 +114,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     @Test
-    public void testSortByIpDesc() {
+    public void testSortByIpDesc()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "ip", "-o", "desc");
         result.asserts().success();
         String output = result.getStdout();
@@ -125,7 +132,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
 
     // Test Cases for Load
     @Test
-    public void testSortByLoadDefault() {
+    public void testSortByLoadDefault()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "load");
         result.asserts().success();
         String output = result.getStdout();
@@ -135,9 +143,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
         List<Long> loadList = loads.stream()
                 .map(load -> {
                     // If load contains '?', assign it a value that will be placed last
-                    if (load.contains("?")) {
+                    if (load.contains("?"))
                         return Long.MIN_VALUE;
-                    }
                     return FileUtils.parseFileSize(load);
                 })
                 .collect(Collectors.toList());
@@ -151,7 +158,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     @Test
-    public void testSortByLoadAsc() {
+    public void testSortByLoadAsc()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "load", "-o", "asc");
         result.asserts().success();
         String output = result.getStdout();
@@ -161,9 +169,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
         List<Long> loadList = loads.stream()
                 .map(load -> {
                     // If load contains '?', assign it a value that will be placed first
-                    if (load.contains("?")) {
+                    if (load.contains("?"))
                         return Long.MIN_VALUE;
-                    }
                     return FileUtils.parseFileSize(load);
                 })
                 .collect(Collectors.toList());
@@ -177,7 +184,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     @Test
-    public void testSortByLoadDesc() {
+    public void testSortByLoadDesc()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "load", "-o", "desc");
         result.asserts().success();
         String output = result.getStdout();
@@ -187,9 +195,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
         List<Long> loadList = loads.stream()
                 .map(load -> {
                     // If load contains '?', assign it a value that will be placed last
-                    if (load.contains("?")) {
+                    if (load.contains("?"))
                         return Long.MIN_VALUE;
-                    }
                     return FileUtils.parseFileSize(load);
                 })
                 .collect(Collectors.toList());
@@ -204,7 +211,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
 
     // Test cases for owns
     @Test
-    public void testSortByOwnsDefault() {
+    public void testSortByOwnsDefault()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "owns");
         result.asserts().success();
         String output = result.getStdout();
@@ -220,7 +228,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     @Test
-    public void testSortByOwnsAsc() {
+    public void testSortByOwnsAsc()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "owns", "-o", "asc");
         result.asserts().success();
         String output = result.getStdout();
@@ -236,7 +245,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     @Test
-    public void testSortByOwnsDesc() {
+    public void testSortByOwnsDesc()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "owns", "-o", "desc");
         result.asserts().success();
         String output = result.getStdout();
@@ -253,7 +263,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
 
     // Test cases for State
     @Test
-    public void testSortByStateDefault() {
+    public void testSortByStateDefault()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "state");
         result.asserts().success();
         String output = result.getStdout();
@@ -266,7 +277,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     @Test
-    public void testSortByStateAsc() {
+    public void testSortByStateAsc()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "state", "-o", "asc");
         result.asserts().success();
         String output = result.getStdout();
@@ -279,7 +291,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     @Test
-    public void testSortByStateDesc() {
+    public void testSortByStateDesc()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "state", "-o", "desc");
         result.asserts().success();
         String output = result.getStdout();
@@ -293,7 +306,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
 
     // Test cases for Host
     @Test
-    public void testSortByHostDefault() {
+    public void testSortByHostDefault()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "id");
         result.asserts().success();
         String output = result.getStdout();
@@ -306,7 +320,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     @Test
-    public void testSortByHostAsc() {
+    public void testSortByHostAsc()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "id", "-o", "asc");
         result.asserts().success();
         String output = result.getStdout();
@@ -319,7 +334,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     @Test
-    public void testSortByHostDesc() {
+    public void testSortByHostDesc()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "id", "-o", "desc");
         result.asserts().success();
         String output = result.getStdout();
@@ -333,7 +349,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
 
     // Test cases for Rack
     @Test
-    public void testSortByRackDefault() {
+    public void testSortByRackDefault()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "rack");
         result.asserts().success();
         String output = result.getStdout();
@@ -346,7 +363,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     @Test
-    public void testSortByRackAsc() {
+    public void testSortByRackAsc()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "rack", "-o", "asc");
         result.asserts().success();
         String output = result.getStdout();
@@ -359,7 +377,8 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     @Test
-    public void testSortByRackDesc() {
+    public void testSortByRackDesc()
+    {
         NodeToolResult result = NODE_1.nodetoolResult("status", "-s", "rack", "-o", "desc");
         result.asserts().success();
         String output = result.getStdout();
@@ -372,27 +391,33 @@ public class NodeToolStatusTest extends TestBaseImpl {
     }
 
     // Helper Methods
-    private InetAddressAndPort parseInetAddress(String ip) {
-        try {
+    private InetAddressAndPort parseInetAddress(String ip)
+    {
+        try
+        {
             return InetAddressAndPort.getByName(ip);
-        } catch (UnknownHostException e) {
+        }
+        catch (UnknownHostException e)
+        {
             throw new IllegalArgumentException("Invalid IP address", e);
         }
     }
 
-    private List<String> extractColumn(String output, int columnIndex) {
+    private List<String> extractColumn(String output, int columnIndex)
+    {
         List<String> columnValues = new ArrayList<>();
         String[] lines = output.split("\n");
 
         // Skip the first five lines as headers
         int skippedLines = 0;
-        for (String line : lines) {
-            if (line.trim().isEmpty()) {
+        for (String line : lines)
+        {
+            if (line.trim().isEmpty())
                 continue; // Skip separator lines and empty lines
-            }
 
             // Skip the first five lines as they are headers
-            if (skippedLines < 5) {
+            if (skippedLines < 5)
+            {
                 skippedLines++;
                 continue;
             }
@@ -402,10 +427,10 @@ public class NodeToolStatusTest extends TestBaseImpl {
             String[] columns = line.trim().split("\\s{2,}");  // Split on 2 or more spaces
 
             // Check if the line has enough columns (avoid index out of bounds errors)
-            if (columns.length > columnIndex) {
+            if (columns.length > columnIndex)
                 columnValues.add(columns[columnIndex].trim());
-            }
         }
 
         return columnValues;
     }
+}
