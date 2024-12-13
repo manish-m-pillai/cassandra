@@ -150,7 +150,7 @@ public class StatusTest extends CQLTester
     @Test
     public void testSortByStatus() {
         HostStatWithPort host = new HostStatWithPort(null, FBUtilities.getBroadcastAddressAndPort(), false, null);
-        validateStatusOutput(host.ipOrDns(false), "status", "-s", "status");
+        validateStatusOutput(host.ipOrDns(false), "status", "-s", "state");
     }
 
     @Test
