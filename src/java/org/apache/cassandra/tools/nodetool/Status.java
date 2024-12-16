@@ -224,7 +224,7 @@ public class Status extends NodeToolCmd {
             return 0;
         }
 
-        LinkedHashMap<String, List<Object>> compareStrings(Map<String, List<Object>> data, int index)
+        protected LinkedHashMap<String, List<Object>> compareStrings(Map<String, List<Object>> data, int index)
         {
             return data.entrySet()
                     .stream()
