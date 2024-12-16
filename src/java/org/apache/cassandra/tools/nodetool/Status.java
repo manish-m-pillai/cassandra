@@ -197,24 +197,24 @@ public class Status extends NodeToolCmd {
 
         public abstract Map<String, List<Object>> sort(Map<String, List<Object>> data);
 
-        boolean descending(SortOrder sortOrder)
+        protected boolean descending(SortOrder sortOrder)
         {
             return sortOrder == null ? descendingByDefault : sortOrder == SortOrder.desc;
         }
 
-        SortBy sortOrder(SortOrder sortOrder)
+        protected SortBy sortOrder(SortOrder sortOrder)
         {
             this.sortOrder = sortOrder;
             return this;
         }
 
-        SortBy tokenPerNode(boolean tokenPerNode)
+        protected SortBy tokenPerNode(boolean tokenPerNode)
         {
             this.tokenPerNode = tokenPerNode;
             return this;
         }
 
-        int evaluateComparision(int comparisionResult)
+        protected int evaluateComparision(int comparisionResult)
         {
             if (comparisionResult < 0)
                 return descending(sortOrder) ? 1 : -1;
