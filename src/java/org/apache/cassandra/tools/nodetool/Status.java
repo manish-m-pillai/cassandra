@@ -237,15 +237,6 @@ public class Status extends NodeToolCmd {
         }
     }
 
-    private void validateArguments(PrintStream out)
-    {
-        if (sortOrder != null && sortBy == SortBy.none)
-        {
-            out.printf("%nError: %s%n", "Sort order (-o / --order) can only be used while sorting using -s or --sort.");
-            System.exit(1);
-        }
-    }
-
     @Override
     public void execute(NodeProbe probe)
     {
@@ -354,6 +345,15 @@ public class Status extends NodeToolCmd {
         }
 
         out.printf("%n" + errors);
+    }
+
+    private void validateArguments(PrintStream out)
+    {
+        if (sortOrder != null && sortBy == SortBy.none)
+        {
+            out.printf("%nError: %s%n", "Sort order (-o / --order) can only be used while sorting using -s or --sort.");
+            System.exit(1);
+        }
     }
 
     private void addNodesHeader(boolean hasEffectiveOwns, TableBuilder tableBuilder)
